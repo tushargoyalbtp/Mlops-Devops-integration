@@ -260,7 +260,7 @@ model.compile(optimizer=RMSprop(), loss='categorical_crossentropy',
 # In[62]:
 
 
-h = model.fit(X_train, y_train_cat, epochs=20)
+h = model.fit(X_train, y_train_cat, epochs=2)
 
 
 # In[64]:
