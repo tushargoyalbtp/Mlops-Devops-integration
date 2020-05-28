@@ -1,119 +1,262 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+
+
 # In[1]:
 
 
-import keras, sys
+import pandas as pd
+
+
+# In[2]:
+
+
+dataset = pd.read_csv("Churn_Modelling.csv")
+
+
+# In[3]:
+
+
+dataset.columns
+
+
+# In[4]:
+
+
+y = dataset['Exited']
+X = dataset[['CreditScore',
+       'Age', 'Tenure', 'Balance', 'NumOfProducts', 'HasCrCard',
+       'IsActiveMember', 'EstimatedSalary']]
+
+
+# In[5]:
+
+
+X
+
+
+# In[6]:
+
+
+geo = dataset['Geography']
+
+
+# In[7]:
+
+
+geo = pd.get_dummies(geo , drop_first=True)
+
+
+# In[8]:
+
+
+gender = dataset['Gender']
+
+
+# In[9]:
+
+
+gender = pd.get_dummies(gender , drop_first=True)
+
+
+# In[10]:
+
+
+X
+
+
+# In[11]:
+
+
+X = pd.concat([X, geo ,gender],axis=1)
+
+
+# In[12]:
+
+
+X.isnull()
+
+
+# In[13]:
+
+
+X
+
+
+# In[14]:
+
+
+from sklearn.model_selection import train_test_split
+
+
+# In[15]:
+
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.20, random_state=42)
+
+
+# In[37]:
+
+
 from keras.models import Sequential
-from keras.layers import Dense, Activation, Flatten
-from keras.layers import Conv2D, MaxPooling2D
-from keras.datasets import mnist
-from keras.utils import np_utils
 
-# Making Command line arguments optional
-# Tweeking Model 
-ker_size = 2
-batch_size_passed = 1024
-no_of_epochs = 1
-crp_count = 1
-fc_count = 1
-if len(sys.argv) == 2:
-    ker_size = int(sys.argv[1])
-elif len(sys.argv) == 3:
-    ker_size = int(sys.argv[1])
-    batch_size_passed = int(sys.argv[2])
-elif len(sys.argv) == 4:
-    ker_size = int(sys.argv[1])
-    batch_size_passed = int(sys.argv[2])
-    no_of_epochs = int(sys.argv[3])
-elif len(sys.argv) == 5:
-    ker_size = int(sys.argv[1])
-    batch_size_passed = int(sys.argv[2])
-    no_of_epochs = int(sys.argv[3])
-    crp_count = int(sys.argv[4])
-elif len(sys.argv) == 6:
-    ker_size = int(sys.argv[1])
-    batch_size_passed = int(sys.argv[2])
-    no_of_epochs = int(sys.argv[3])
-    crp_count = int(sys.argv[4])
-    fc_count = int(sys.argv[5])
 
-# Loading MNIST Dataset
-(x_train, y_train), (x_test, y_test)  = mnist.load_data()
+# In[38]:
 
-# Finding No. of Rows and Columns
-rows_of_img = x_train[0].shape[0]
-cols_of_img = x_train[1].shape[0]
 
-# store the shape of a single image 
-input_shape = (rows_of_img, cols_of_img, 1)
+import seaborn as sns
 
-# change our image type to float32 data type
-x_train = x_train.astype('float32')
-x_test = x_test.astype('float32')
 
-# Featuring Scaling - Normalization
-x_train /= 255
-x_test /= 255
+# In[39]:
 
-# Doing One-Hot Encoding
-y_train = np_utils.to_categorical(y_train)
-y_test = np_utils.to_categorical(y_test)
 
-n_classes = y_test.shape[1]
+X.columns
 
-# Set Kernel Size
-kernel_size = (ker_size,ker_size)
 
-# Creating model
+# In[40]:
+
+
+age = X['Age']
+
+
+# In[41]:
+
+
+sns.scatterplot(X)
+
+
+# In[42]:
+
+
+import matplotlib.pyplot as plt
+
+
+# In[43]:
+
+
+plt.scatter(age , y)
+
+
+# In[44]:
+
+
 model = Sequential()
 
-# Adding CRP layers
-model.add(Conv2D(20,kernel_size,padding="same",input_shape=input_shape))
-model.add(Activation("relu"))
-model.add(MaxPooling2D(pool_size=(2,2)))
 
-count = 1
-while count <= crp_count:
-    model.add(Conv2D(50,kernel_size,padding="same"))
-    model.add(Activation("relu"))
-    model.add(MaxPooling2D(pool_size=(2,2), strides=(2,2)))
-    count+=1
-    
-# FC
-model.add(Flatten())
+# In[45]:
 
-count = 1
-while count <= fc_count:
-    model.add(Dense(500))
-    model.add(Activation("relu"))
-    count+=1
-    
-model.add(Dense(n_classes))
-model.add(Activation("softmax")) 
 
-model.compile(loss="categorical_crossentropy", optimizer=keras.optimizers.Adadelta(),metrics=['accuracy'])
+from keras.layers import Dense
 
-print(model.summary())
 
-# Conerting Images to 4D
-x_train = x_train.reshape(x_train.shape[0], rows_of_img, cols_of_img, 1)
-x_test = x_test.reshape(x_test.shape[0], rows_of_img, cols_of_img, 1)
+# In[46]:
 
-# Training Parameters
-batch_size = batch_size_passed
-epochs = no_of_epochs
 
-history = model.fit(x_train, y_train,
-          batch_size=batch_size,
-          epochs=epochs,
-          validation_data=(x_test, y_test), 
-          shuffle=True)
+X_train 
 
-model.save("mnist_LeNet.h5")   
 
-# Evaluating the accuracy
-scores = model.evaluate(x_test, y_test, verbose=1) 
-print("\nAccuracy is :-\n") 
-print(int(scores[1] * 100)) 
+# In[47]:
+
+
+y_train
+
+
+# In[48]:
+
+
+model.add(Dense()) # error because they need units 
+
+
+# In[49]:
+
+
+model.add(Dense(units=6 , input_dim=11))
+
+
+# In[50]:
+
+
+model.add(Dense(units=6))
+model.add(Dense(units=8))
+model.add(Dense(units=1 , activation='sigmoid'))
+
+
+# In[51]:
+
+
+#model.compile() #they need optimizer 
+
+
+# In[52]:
+
+
+model.compile(optimizer=Adam()) #fail because we need to import adam and also set loss on it 
+
+
+# In[53]:
+
+
+from keras.optimizers import Adam
+
+
+# In[56]:
+
+
+model.compile(optimizer=Adam(),loss='binary_crossentropy',metrics=['accuracy'])
+
+
+# In[57]:
+
+
+model.fit(X_train , y_train , epochs=50)
+
+
+# In[30]:
+
+
+#model.compile(optimizer=Adam(learning_rate=0.0001),loss='binary_crossentropy')
+
+
+# In[31]:
+
+
+#first layer is input layer then 2 layer is hidden layer 
+#model.add(Dense(units=6, input_dim=11 , activation='relu'))
+#model.add(Dense(units=6, activation='relu'))
+#model.add(Dense(units=8, activation='relu'))
+
+
+# In[32]:
+
+
+#output layer
+#model.add(Dense(units=1 , activation='sigmoid')
+
+
+# In[33]:
+
+
+#model.compile(optimizer=Adam(learning_rate=0.000001),loss='binary_crossentropy' )
+
+
+# In[34]:
+
+
+#model.fit(X_train,y_train , epochs=200 , verbose=0)
+
+
+# In[35]:
+
+
+#df_loss = pd.DataFrame(model.history.history)
+
+
+# In[36]:
+
+
+#df_loss.plot()
+
+
+# In[ ]: 
