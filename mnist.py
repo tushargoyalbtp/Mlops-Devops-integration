@@ -6,267 +6,116 @@
 # In[1]:
 
 
-from keras.datasets import mnist
-
-
-# In[2]:
-
-
-dataset = mnist.load_data('mymnist.db')
-
-
-# In[3]:
-
-
-len(dataset)
-
-
-# In[4]:
-
-
-train , test = dataset
-
-
-# In[5]:
-
-
-len(train)
-
-
-# In[6]:
-
-
-X_train , y_train = train
-
-
-# In[7]:
-
-
-X_train.shape
-
-
-# In[8]:
-
-
-X_test , y_test = test
-
-
-# In[9]:
-
-
-X_test.shape
-
-
-# In[10]:
-
-
-img1 = X_train[7]
-
-
-# In[11]:
-
-
-img1.shape
-
-
-# In[12]:
-
-
-img1_label = y_train[7]
-
-
-# In[13]:
-
-
-img1_label
-
-
-# In[14]:
-
-
-img1.shape
-
-
-# In[15]:
-
-
-img1.shape
-
-
-# In[16]:
-
-
-img1_1d = img1.reshape(28*28)
-
-
-# In[17]:
-
-
-img1_1d.shape
-
-
-# In[18]:
-
-
-X_train.shape
-
-
-# In[19]:
-
-
-X_train_1d = X_train.reshape(-1 , 28*28)
-X_test_1d = X_test.reshape(-1 , 28*28)
-
-
-# In[20]:
-
-
-X_train_1d.shape
-
-
-# In[21]:
-
-
-X_train = X_train_1d.astype('float32')
-X_test = X_test_1d.astype('float32')
-
-
-# In[22]:
-
-
-X_train.shape
-
-
-# In[23]:
-
-
-y_train.shape
-
-
-# In[24]:
-
-
-from keras.utils.np_utils import to_categorical
-
-
-# In[25]:
-
-
-y_train_cat = to_categorical(y_train)
-
-
-# In[26]:
-
-
-y_train_cat
-
-
-# In[27]:
-
-
-y_train_cat[7]
-
-
-# In[28]:
-
-
+import keras, sys
 from keras.models import Sequential
+from keras.layers import Dense, Activation, Flatten
+from keras.layers import Conv2D, MaxPooling2D
+from keras.datasets import mnist
+from keras.utils import np_utils
 
+# Making Command line arguments optional
+# Tweeking Model 
+ker_size = 2
+batch_size_passed = 1024
+no_of_epochs = 1
+crp_count = 1
+fc_count = 1
+if len(sys.argv) == 2:
+    ker_size = int(sys.argv[1])
+elif len(sys.argv) == 3:
+    ker_size = int(sys.argv[1])
+    batch_size_passed = int(sys.argv[2])
+elif len(sys.argv) == 4:
+    ker_size = int(sys.argv[1])
+    batch_size_passed = int(sys.argv[2])
+    no_of_epochs = int(sys.argv[3])
+elif len(sys.argv) == 5:
+    ker_size = int(sys.argv[1])
+    batch_size_passed = int(sys.argv[2])
+    no_of_epochs = int(sys.argv[3])
+    crp_count = int(sys.argv[4])
+elif len(sys.argv) == 6:
+    ker_size = int(sys.argv[1])
+    batch_size_passed = int(sys.argv[2])
+    no_of_epochs = int(sys.argv[3])
+    crp_count = int(sys.argv[4])
+    fc_count = int(sys.argv[5])
 
-# In[29]:
+# Loading MNIST Dataset
+(x_train, y_train), (x_test, y_test)  = mnist.load_data()
 
+# Finding No. of Rows and Columns
+rows_of_img = x_train[0].shape[0]
+cols_of_img = x_train[1].shape[0]
 
-from keras.layers import Dense
+# store the shape of a single image 
+input_shape = (rows_of_img, cols_of_img, 1)
 
+# change our image type to float32 data type
+x_train = x_train.astype('float32')
+x_test = x_test.astype('float32')
 
-# In[30]:
+# Featuring Scaling - Normalization
+x_train /= 255
+x_test /= 255
 
+# Doing One-Hot Encoding
+y_train = np_utils.to_categorical(y_train)
+y_test = np_utils.to_categorical(y_test)
 
+n_classes = y_test.shape[1]
+
+# Set Kernel Size
+kernel_size = (ker_size,ker_size)
+
+# Creating model
 model = Sequential()
 
+# Adding CRP layers
+model.add(Conv2D(20,kernel_size,padding="same",input_shape=input_shape))
+model.add(Activation("relu"))
+model.add(MaxPooling2D(pool_size=(2,2)))
 
-# In[31]:
+count = 1
+while count <= crp_count:
+    model.add(Conv2D(50,kernel_size,padding="same"))
+    model.add(Activation("relu"))
+    model.add(MaxPooling2D(pool_size=(2,2), strides=(2,2)))
+    count+=1
+    
+# FC
+model.add(Flatten())
 
+count = 1
+while count <= fc_count:
+    model.add(Dense(500))
+    model.add(Activation("relu"))
+    count+=1
+    
+model.add(Dense(n_classes))
+model.add(Activation("softmax")) 
 
-model.add(Dense(units=512, input_dim=28*28, activation='relu'))
+model.compile(loss="categorical_crossentropy", optimizer=keras.optimizers.Adadelta(),metrics=['accuracy'])
 
+print(model.summary())
 
-# In[32]:
+# Conerting Images to 4D
+x_train = x_train.reshape(x_train.shape[0], rows_of_img, cols_of_img, 1)
+x_test = x_test.reshape(x_test.shape[0], rows_of_img, cols_of_img, 1)
 
+# Training Parameters
+batch_size = batch_size_passed
+epochs = no_of_epochs
 
-model.summary()
+history = model.fit(x_train, y_train,
+          batch_size=batch_size,
+          epochs=epochs,
+          validation_data=(x_test, y_test), 
+          shuffle=True)
 
+model.save("mnist_LeNet.h5")   
 
-# In[33]:
-
-
-model.add(Dense(units=256, activation='relu'))
-
-
-# In[34]:
-
-
-model.add(Dense(units=128, activation='relu'))
-
-
-# In[35]:
-
-
-model.add(Dense(units=32, activation='relu'))
-
-
-# In[36]:
-
-
-model.summary()
-
-
-# In[37]:
-
-
-model.add(Dense(units=10, activation='softmax'))
-
-
-# In[38]:
-
-
-model.summary()
-
-
-# In[39]:
-
-
-from keras.optimizers import RMSprop
-
-
-# In[40]:
-
-
-model.compile(optimizer=RMSprop(), loss='categorical_crossentropy', 
-             metrics=['accuracy']
-             )
-
-
-# In[41]:
-
-
-history = model.fit(X_train, y_train_cat, epochs=1)
-
-
-# In[45]:
-
-
-print(max(history.history['accuracy']))
-if (max(history.history['accuracy'])) > .80 :
-    model.save('model.h5')
-
-
-# In[47]:
-
-
-accuracy = open('/root/task3/accuracy.txt','w+')
-accuracy.write (str(history.history['accuracy']))
-accuracy.close()
-
-
-# In[ ]:
+# Evaluating the accuracy
+scores = model.evaluate(x_test, y_test, verbose=1) 
+print("\nAccuracy is :-\n") 
+print(int(scores[1] * 100))
