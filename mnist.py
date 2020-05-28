@@ -6,257 +6,267 @@
 # In[1]:
 
 
-import pandas as pd
+from keras.datasets import mnist
 
 
 # In[2]:
 
 
-dataset = pd.read_csv("Churn_Modelling.csv")
+dataset = mnist.load_data('mymnist.db')
 
 
 # In[3]:
 
 
-dataset.columns
+len(dataset)
 
 
 # In[4]:
 
 
-y = dataset['Exited']
-X = dataset[['CreditScore',
-       'Age', 'Tenure', 'Balance', 'NumOfProducts', 'HasCrCard',
-       'IsActiveMember', 'EstimatedSalary']]
+train , test = dataset
 
 
 # In[5]:
 
 
-X
+len(train)
 
 
 # In[6]:
 
 
-geo = dataset['Geography']
+X_train , y_train = train
 
 
 # In[7]:
 
 
-geo = pd.get_dummies(geo , drop_first=True)
+X_train.shape
 
 
 # In[8]:
 
 
-gender = dataset['Gender']
+X_test , y_test = test
 
 
 # In[9]:
 
 
-gender = pd.get_dummies(gender , drop_first=True)
+X_test.shape
 
 
 # In[10]:
 
 
-X
+img1 = X_train[7]
 
 
 # In[11]:
 
 
-X = pd.concat([X, geo ,gender],axis=1)
+img1.shape
 
 
 # In[12]:
 
 
-X.isnull()
+img1_label = y_train[7]
 
 
 # In[13]:
 
 
-X
+img1_label
 
 
 # In[14]:
 
 
-from sklearn.model_selection import train_test_split
+img1.shape
 
 
 # In[15]:
 
 
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.20, random_state=42)
+img1.shape
 
 
-# In[37]:
+# In[16]:
+
+
+img1_1d = img1.reshape(28*28)
+
+
+# In[17]:
+
+
+img1_1d.shape
+
+
+# In[18]:
+
+
+X_train.shape
+
+
+# In[19]:
+
+
+X_train_1d = X_train.reshape(-1 , 28*28)
+X_test_1d = X_test.reshape(-1 , 28*28)
+
+
+# In[20]:
+
+
+X_train_1d.shape
+
+
+# In[21]:
+
+
+X_train = X_train_1d.astype('float32')
+X_test = X_test_1d.astype('float32')
+
+
+# In[22]:
+
+
+X_train.shape
+
+
+# In[23]:
+
+
+y_train.shape
+
+
+# In[24]:
+
+
+from keras.utils.np_utils import to_categorical
+
+
+# In[25]:
+
+
+y_train_cat = to_categorical(y_train)
+
+
+# In[26]:
+
+
+y_train_cat
+
+
+# In[27]:
+
+
+y_train_cat[7]
+
+
+# In[28]:
 
 
 from keras.models import Sequential
 
 
-# In[38]:
-
-
-import seaborn as sns
-
-
-# In[39]:
-
-
-X.columns
-
-
-# In[40]:
-
-
-age = X['Age']
-
-
-# In[41]:
-
-
-sns.scatterplot(X)
-
-
-# In[42]:
-
-
-import matplotlib.pyplot as plt
-
-
-# In[43]:
-
-
-plt.scatter(age , y)
-
-
-# In[44]:
-
-
-model = Sequential()
-
-
-# In[45]:
+# In[29]:
 
 
 from keras.layers import Dense
 
 
-# In[46]:
-
-
-X_train 
-
-
-# In[47]:
-
-
-y_train
-
-
-# In[48]:
-
-
-model.add(Dense()) # error because they need units 
-
-
-# In[49]:
-
-
-model.add(Dense(units=6 , input_dim=11))
-
-
-# In[50]:
-
-
-model.add(Dense(units=6))
-model.add(Dense(units=8))
-model.add(Dense(units=1 , activation='sigmoid'))
-
-
-# In[51]:
-
-
-#model.compile() #they need optimizer 
-
-
-# In[52]:
-
-
-model.compile(optimizer=Adam()) #fail because we need to import adam and also set loss on it 
-
-
-# In[53]:
-
-
-from keras.optimizers import Adam
-
-
-# In[56]:
-
-
-model.compile(optimizer=Adam(),loss='binary_crossentropy',metrics=['accuracy'])
-
-
-# In[57]:
-
-
-model.fit(X_train , y_train , epochs=50)
-
-
 # In[30]:
 
 
-#model.compile(optimizer=Adam(learning_rate=0.0001),loss='binary_crossentropy')
+model = Sequential()
 
 
 # In[31]:
 
 
-#first layer is input layer then 2 layer is hidden layer 
-#model.add(Dense(units=6, input_dim=11 , activation='relu'))
-#model.add(Dense(units=6, activation='relu'))
-#model.add(Dense(units=8, activation='relu'))
+model.add(Dense(units=512, input_dim=28*28, activation='relu'))
 
 
 # In[32]:
 
 
-#output layer
-#model.add(Dense(units=1 , activation='sigmoid')
+model.summary()
 
 
 # In[33]:
 
 
-#model.compile(optimizer=Adam(learning_rate=0.000001),loss='binary_crossentropy' )
+model.add(Dense(units=256, activation='relu'))
 
 
 # In[34]:
 
 
-#model.fit(X_train,y_train , epochs=200 , verbose=0)
+model.add(Dense(units=128, activation='relu'))
 
 
 # In[35]:
 
 
-#df_loss = pd.DataFrame(model.history.history)
+model.add(Dense(units=32, activation='relu'))
 
 
 # In[36]:
 
 
-#df_loss.plot()
+model.summary()
 
 
-# In[ ]: 
+# In[37]:
+
+
+model.add(Dense(units=10, activation='softmax'))
+
+
+# In[38]:
+
+
+model.summary()
+
+
+# In[39]:
+
+
+from keras.optimizers import RMSprop
+
+
+# In[40]:
+
+
+model.compile(optimizer=RMSprop(), loss='categorical_crossentropy', 
+             metrics=['accuracy']
+             )
+
+
+# In[41]:
+
+
+history = model.fit(X_train, y_train_cat, epochs=1)
+
+
+# In[45]:
+
+
+print(max(history.history['accuracy']))
+if (max(history.history['accuracy'])) > .80 :
+    model.save('model.h5')
+
+
+# In[47]:
+
+
+accuracy = open('/root/task3/accuracy.txt','w+')
+accuracy.write (str(history.history['accuracy']))
+accuracy.close()
+
+
+# In[ ]:
